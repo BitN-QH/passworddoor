@@ -1,0 +1,78 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+D:\Code\MCU Code\Project\Demo\MAIN.uvproj
+Project File Date:  06/28/2025
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling main.c...
+compiling smg.c...
+compiling stepmotor.c...
+compiling 24c02.c...
+compiling iic.c...
+compiling scankey.c...
+compiling pamanage.c...
+compiling mainline.c...
+compiling interrupt.c...
+compiling beep.c...
+compiling eeprom.c...
+compiling public.c...
+linking...
+BL51 BANKED LINKER/LOCATER V6.22 - SN: Eval Version
+COPYRIGHT KEIL ELEKTRONIK GmbH 1987 - 2009
+".\Objects\main.obj",
+".\Objects\smg.obj",
+".\Objects\stepmotor.obj",
+".\Objects\24c02.obj",
+".\Objects\iic.obj",
+".\Objects\scankey.obj",
+".\Objects\pamanage.obj",
+".\Objects\mainline.obj",
+".\Objects\interrupt.obj",
+".\Objects\beep.obj",
+".\Objects\eeprom.obj",
+".\Objects\public.obj" 
+TO ".\Objects\MAIN" 
+PRINT(".\Listings\MAIN.m51")
+******************************************************************************
+* RESTRICTED VERSION WITH 0800H BYTE CODE SIZE LIMIT; USED: 0B09H BYTE (137%) *
+******************************************************************************
+Program Size: data=116.0 xdata=0 code=3052
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)
+*** FATAL ERROR L250: CODE SIZE LIMIT IN RESTRICTED VERSION EXCEEDED
+    MODULE:  D:\APP\KEIL4\C51\LIB\C51S.LIB (-----)
+    LIMIT:   0800H BYTES
+Target not created
+Build target 'Target 1'
+compiling stepmotor.c...
+compiling mainline.c...
+compiling interrupt.c...
+linking...
+BL51 BANKED LINKER/LOCATER V6.22 - SN: Eval Version
+COPYRIGHT KEIL ELEKTRONIK GmbH 1987 - 2009
+".\Objects\main.obj",
+".\Objects\smg.obj",
+".\Objects\stepmotor.obj",
+".\Objects\24c02.obj",
+".\Objects\iic.obj",
+".\Objects\scankey.obj",
+".\Objects\pamanage.obj",
+".\Objects\mainline.obj",
+".\Objects\interrupt.obj",
+".\Objects\beep.obj",
+".\Objects\eeprom.obj",
+".\Objects\public.obj" 
+TO ".\Objects\MAIN" 
+PRINT(".\Listings\MAIN.m51")
+******************************************************************************
+* RESTRICTED VERSION WITH 0800H BYTE CODE SIZE LIMIT; USED: 0B09H BYTE (137%) *
+******************************************************************************
+Program Size: data=116.0 xdata=0 code=3052
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)
+*** FATAL ERROR L250: CODE SIZE LIMIT IN RESTRICTED VERSION EXCEEDED
+    MODULE:  D:\APP\KEIL4\C51\LIB\C51S.LIB (-----)
+    LIMIT:   0800H BYTES
+Target not created

@@ -1,0 +1,59 @@
+C51 COMPILER V9.54   EEPROM                                                                09/17/2025 21:08:02 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE EEPROM
+OBJECT MODULE PLACED IN .\Objects\eeprom.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\eeprom\eeprom.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24C02;.\
+                    -App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.\App\s
+                    -cankey) DEBUG OBJECTEXTEND PRINT(.\Listings\eeprom.lst) TABS(2) OBJECT(.\Objects\eeprom.obj)
+
+line level    source
+
+   1          #include "eeprom.h"
+   2          #include "pamanage.h"
+   3          #include "24c02.h"
+   4          
+   5          void PARead()
+   6          {
+   7   1        u8 i = 0;
+   8   1        for (i = 0; i < 8; i++)
+   9   1        {
+  10   2          ALLPASSWORD[i] = at24c02_read_one_byte(i);
+  11   2        }
+  12   1        for (i = 8; i < 16; i++)
+  13   1        {
+  14   2          PASSWORD[i - 8] = at24c02_read_one_byte(i);
+  15   2        }
+  16   1      }
+  17          
+  18          void PAWrite()
+  19          {
+  20   1        u8 i = 8;
+  21   1        for (i = 8; i < 16; i++)
+  22   1        {
+  23   2          at24c02_write_one_byte(i, PASSWORD[i - 8]);
+  24   2        }
+  25   1      }
+  26          
+  27          void ADPAWrite()
+  28          {
+  29   1        u8 i = 0;
+  30   1        for (i = 0; i < 8; i++)
+  31   1        {
+  32   2          at24c02_write_one_byte(i, ALLPASSWORD[i]);
+  33   2        }
+  34   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    106    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

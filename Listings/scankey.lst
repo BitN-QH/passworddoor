@@ -1,0 +1,175 @@
+C51 COMPILER V9.54   SCANKEY                                                               09/17/2025 21:08:01 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE SCANKEY
+OBJECT MODULE PLACED IN .\Objects\scankey.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\scankey\scankey.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24C02;
+                    -.\App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.\App
+                    -\scankey) DEBUG OBJECTEXTEND PRINT(.\Listings\scankey.lst) TABS(2) OBJECT(.\Objects\scankey.obj)
+
+line level    source
+
+   1          #include "scankey.h"
+   2          #include "interrupt.h"
+   3          
+   4          u8 KEY = 16;
+   5          u8 KEY1 = 16;
+   6          u8 KEY2 = 16;
+   7          
+   8          u8 getKeyNum()
+   9          {
+  10   1        u8 key = 16;
+  11   1        P1 = 0X0F;
+  12   1        if (!(K1 && K2 && K3 && K4))
+  13   1        {
+  14   2          delay_ms(10);
+  15   2          if (K1 == 0)
+  16   2            return 102;
+  17   2          if (K2 == 0)
+  18   2            return 101;
+  19   2          if (K3 == 0)
+  20   2            return 103;
+  21   2          if (K4 == 0)
+  22   2            return 104;
+  23   2        }
+  24   1        if (P1 != 0X0F)
+  25   1        {
+  26   2          delay_ms(10);
+  27   2          if (P1 != 0X0F)
+  28   2          {
+  29   3            if (P1 == 0x07)
+  30   3            {
+  31   4              key = 0;
+  32   4            }
+  33   3            else if (P1 == 0x0B)
+  34   3            {
+  35   4              key = 1;
+  36   4            }
+  37   3            else if (P1 == 0x0D)
+  38   3            {
+  39   4              key = 2;
+  40   4            }
+  41   3            else if (P1 == 0x0E)
+  42   3            {
+  43   4              key = 3;
+  44   4            }
+  45   3            P1 = 0XF0;
+  46   3            if (P1 == 0x70)
+  47   3            {
+  48   4              key = key + 0;
+  49   4            }
+  50   3            else if (P1 == 0xB0)
+  51   3            {
+  52   4              key = key + 4;
+  53   4            }
+C51 COMPILER V9.54   SCANKEY                                                               09/17/2025 21:08:01 PAGE 2   
+
+  54   3            else if (P1 == 0xD0)
+  55   3            {
+  56   4              key = key + 8;
+  57   4            }
+  58   3            else if (P1 == 0xE0)
+  59   3            {
+  60   4              key = key + 12;
+  61   4            }
+  62   3            while (P1 != 0XF0);
+  63   3          }
+  64   2        }
+  65   1        return key;
+  66   1      }
+  67          
+  68          void getIr()
+  69          {
+  70   1          if(isIr == 0)       
+  71   1          {
+  72   2          switch(gired_data[2])     
+  73   2          {
+  74   3            case 0x16:
+  75   3              KEY2 = 0;
+  76   3              isIr = 1;      
+  77   3              break;
+  78   3          case 0x0c:
+  79   3              KEY2 = 1;
+  80   3              isIr = 1; 
+  81   3              break;
+  82   3          case 0x18:
+  83   3              KEY2 = 2;
+  84   3              isIr = 1; 
+  85   3              break;
+  86   3          case 0x5e:
+  87   3              KEY2 = 3;
+  88   3              isIr = 1; 
+  89   3              break;
+  90   3          case 0x08:
+  91   3              KEY2 = 4;
+  92   3              isIr = 1; 
+  93   3              break;
+  94   3          case 0x1c:
+  95   3              KEY2 = 5;
+  96   3              isIr = 1; 
+  97   3              break;
+  98   3          case 0x5a:
+  99   3              KEY2 = 6;
+ 100   3              isIr = 1; 
+ 101   3              break;
+ 102   3          case 0x42:
+ 103   3              KEY2 = 7;
+ 104   3              isIr = 1;     
+ 105   3              break;
+ 106   3          case 0x52:
+ 107   3              KEY2 = 8;
+ 108   3              isIr = 1; 
+ 109   3              break;
+ 110   3          case 0x4a:
+ 111   3              KEY2 = 9;
+ 112   3              isIr = 1; 
+ 113   3              break;
+ 114   3      
+ 115   3            case 0x45:
+C51 COMPILER V9.54   SCANKEY                                                               09/17/2025 21:08:01 PAGE 3   
+
+ 116   3              KEY2 = 15;
+ 117   3              isIr = 1; 
+ 118   3              break;
+ 119   3            case 0x19:
+ 120   3              KEY2 = 13;
+ 121   3              isIr = 1; 
+ 122   3              break;
+ 123   3            case 0x0d:
+ 124   3              KEY2 = 14;
+ 125   3              isIr = 1; 
+ 126   3              break;
+ 127   3            case 0x40:
+ 128   3              KEY2 = 101;
+ 129   3              isIr = 1; 
+ 130   3              break;
+ 131   3            case 0x43:
+ 132   3              KEY2 = 103;
+ 133   3              isIr = 1; 
+ 134   3              break;
+ 135   3            case 0x44:
+ 136   3              KEY2 = 104;
+ 137   3              isIr = 1; 
+ 138   3              break;
+ 139   3            
+ 140   3         }
+ 141   2        }
+ 142   1        else
+ 143   1        {
+ 144   2          KEY2 = 16;
+ 145   2        }
+ 146   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    306    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

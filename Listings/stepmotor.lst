@@ -1,0 +1,54 @@
+C51 COMPILER V9.54   STEPMOTOR                                                             09/17/2025 21:08:01 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE STEPMOTOR
+OBJECT MODULE PLACED IN .\Objects\stepmotor.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\stepmotor\stepmotor.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24
+                    -C02;.\App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.
+                    -\App\scankey) DEBUG OBJECTEXTEND PRINT(.\Listings\stepmotor.lst) TABS(2) OBJECT(.\Objects\stepmotor.obj)
+
+line level    source
+
+   1          #include "stepmotor.h"
+   2          
+   3          u8 Motor = 3;
+   4          /*******************************************************************************
+   5          * 函 数 名       : step_motor_28BYJ48_send_pulse
+   6          * 函数功能     : 输出一个数据给ULN2003从而实现向步进电机发送一个脉冲
+   7          * 输    入       : step：指定步进序号，可选值0~7
+   8                     dir：方向选择,1：顺时针,0：逆时针
+   9          * 输    出       : 无
+  10          *******************************************************************************/
+  11          void step_motor_28BYJ48_send_pulse(u8 step,u8 dir)
+  12          {
+  13   1        u8 temp=step;
+  14   1        
+  15   1        if(dir==0)  //如果为逆时针旋转
+  16   1          temp=7-step;//调换节拍信号
+  17   1        switch(temp)//8个节拍控制：A->AB->B->BC->C->CD->D->DA
+  18   1        {
+  19   2          case 0: IN1_A=1;IN2_B=0;IN3_C=0;IN4_D=0;break;
+  20   2          case 1: IN1_A=1;IN2_B=1;IN3_C=0;IN4_D=0;break;
+  21   2          case 2: IN1_A=0;IN2_B=1;IN3_C=0;IN4_D=0;break;
+  22   2          case 3: IN1_A=0;IN2_B=1;IN3_C=1;IN4_D=0;break;
+  23   2          case 4: IN1_A=0;IN2_B=0;IN3_C=1;IN4_D=0;break;
+  24   2          case 5: IN1_A=0;IN2_B=0;IN3_C=1;IN4_D=1;break;
+  25   2          case 6: IN1_A=0;IN2_B=0;IN3_C=0;IN4_D=1;break;
+  26   2          case 7: IN1_A=1;IN2_B=0;IN3_C=0;IN4_D=1;break;
+  27   2          default: IN1_A=0;IN2_B=0;IN3_C=0;IN4_D=0;break;//停止相序 
+  28   2        }     
+  29   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    107    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,175 @@
+C51 COMPILER V9.54   KEYBOARD                                                              06/27/2025 10:15:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE KEYBOARD
+OBJECT MODULE PLACED IN .\Objects\keyboard.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\keyboard\keyboard.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24C0
+                    -2;.\App\I2C;.\Public;.\App\smg;.\App\key;.\App\keyboard) DEBUG OBJECTEXTEND PRINT(.\Listings\keyboard.lst) TABS(2) OBJEC
+                    -T(.\Objects\keyboard.obj)
+
+line level    source
+
+   1          #include"Keyboard.h"
+*** WARNING C318 IN LINE 3 OF App\keyboard\Keyboard.h: can't open file 'Base.h'
+*** WARNING C318 IN LINE 4 OF App\keyboard\Keyboard.h: can't open file 'LCD1602.h'
+*** WARNING C318 IN LINE 5 OF App\keyboard\Keyboard.h: can't open file 'LedAndBuzzer.h'
+*** ERROR C129 IN LINE 7 OF App\keyboard\Keyboard.h: missing ';' before 'Compare_flag'
+   2          
+   3          uchar number=0;                            //记录门外的用户输入的密码个数
+   4          uchar code CDIS14[]={"CODE NOT ENOUGH!"};  //提示用户输入的密码位数不够
+   5          uchar code CDIS15[]={"PLEASE CONTINUE!"};
+   6          uchar code CDIS16[]={" NO INPUT CODE! "};  //提示用户还没有输入密码就按下了清除键
+   7          uchar code CDIS17[]={"ENTER THE CODE! "};
+   8          /*
+   9          功能：按键值扫描
+  10          形参：无
+  11          返回值：无
+  12          */
+  13          void Key_scan()
+  14          {
+  15            Key=0xF0;
+  16            if(Key!=0xF0)   //判断是否有按键按下
+  17            {
+  18              Delayms(200);  //去抖延时
+  19              if(Key!=0xF0)
+  20                IdentifiCol();  //确认列
+  21            }
+  22          }
+  23          /*
+  24          功能：确认按键的列
+  25          形参：无
+  26          返回值：无
+  27          */
+  28          void IdentifiCol()
+  29          {
+  30            switch(Key)
+  31            {
+  32              case 0xE0:IdentifiRow(0);break;  //第一列   
+  33              case 0xD0:IdentifiRow(1);break;  //第二列
+  34              case 0xB0:IdentifiRow(2);break;  //第三列
+  35              case 0x70:IdentifiRow(3);break;  //第四列
+  36            }
+  37          }
+  38          
+  39          /*
+  40          功能：确认按键的行
+  41          形参：m为列数
+  42          返回值：无
+  43          */
+  44          void IdentifiRow(uchar m)    //确认行
+  45          {  
+  46             Key=0x0F;    //重要的一步
+  47             switch(Key)
+  48             {
+  49              case 0x0D:Judge_Value(m);break;    //第一行
+C51 COMPILER V9.54   KEYBOARD                                                              06/27/2025 10:15:28 PAGE 2   
+
+  50              case 0x0B:Judge_Value(m+4);break;  //第二行
+  51              case 0x07:Judge_Value(m+8);break;  //第三行
+  52             }
+  53          }
+  54          
+  55          /*
+  56          功能：显示按键的值
+  57          形参：按键的值n
+  58          返回值：无
+  59          */
+  60          void Judge_Value(uchar n)        //段选显示函数
+  61          {
+  62            uchar a=0,i=0;;
+  63            while((a<50) && (Key!=0x0F)) //检测按键松手检测
+  64            {
+  65              Delayms(100);
+  66              a++;
+  67            }
+  68            //以下代码产生1s按键提示音
+  69            BuzzerOpenOrClose(buzzer_on);
+  70            while(i<5)
+  71            {
+  72              i++;
+  73                Delayms(200);
+  74            }
+  75            BuzzerOpenOrClose(buzzer_off);
+  76          
+  77            switch (ConvertToCode(n))
+  78            {
+  79              case 0:if(number==0)      //用户在还没有输入密码就按消除键
+  80                   {
+  81                      Display(CDIS16,CDIS17);
+  82                    i=0;
+  83                    while(i<250)
+  84                    {
+  85                      i++;
+  86                        Delayms(250);
+  87                    }
+  88                    Display(CDIS1,CDIS2);   //提醒用户输入密码
+  89                   }
+  90                   else                   //用户在已经有密码输入的情况下按下了消除键
+  91                   {  
+  92                      number--;         //为了消除之前的“*”键,并在之前的“*”号处显示“-”号
+  93                    lcdwritecom(0xc0+0x07+number);
+  94                    lcdwritedate('-');  
+  95                   }
+  96                   break;
+  97              case 2:if(number<=7)       //用户在还没有输入够8位密码就按下确认键
+  98                  {
+  99                    Display(CDIS14,CDIS15);
+ 100                    i=0;
+ 101                    while(i<250)
+ 102                    {
+ 103                      i++;
+ 104                        Delayms(250);
+ 105                    }
+ 106                      Display(CDIS1,CDIS2);  //提醒用户输入密码
+ 107                    for(i=0;i<number;i++)
+ 108                    {
+ 109                      lcdwritecom(0xc0+0x07+i); //并且保留住之前输入的密码，让用户接着输入
+ 110                      lcdwritedate('*');
+ 111                    }
+C51 COMPILER V9.54   KEYBOARD                                                              06/27/2025 10:15:28 PAGE 3   
+
+ 112                  }
+ 113                  else      //说明用户在输入完8位密码之后按下了确认键
+ 114                  {
+ 115                    Compare_flag=1;    //可以去和原始密码比较了
+ 116                    number=0;
+ 117                  }
+ 118                  break;
+ 119              default :         //用户输入的是正常的0到9之间的数字
+ 120                  if(number<8)        //防止用户在输入够8位密码之后还继续输入数字，此时number不加，直到用户输入确认键
+ 121                  {
+ 122                    lcdwritecom(0xc0+0x07+number);
+ 123                    lcdwritedate(number);
+ 124                    number++;
+ 125                  }
+ 126                  break;
+ 127            }
+ 128          }
+ 129          
+ 130          /*
+ 131          功能描述：处理门外的用户输入的信息，并返回结果
+ 132          返回值：转换之后的红外值或确认的信息，以及消除已经输出的按键值
+ 133          参数：  现在门外用户输入的密码（例如1 2 3 4）
+ 134          */
+ 135          uchar ConvertToCode(uchar n)
+ 136          {
+ 137            switch (n)
+ 138            {
+ 139              case 0: Value2[number]=0x16;return 1;break;
+ 140              case 1: Value2[number]=0x0c;return 1;break;
+ 141              case 2: Value2[number]=0x18;return 1;break;
+ 142              case 3: Value2[number]=0x5e;return 1;break;
+ 143              case 4: Value2[number]=0x08;return 1;break;
+ 144              case 5: Value2[number]=0x1c;return 1;break;
+ 145              case 6: Value2[number]=0x5a;return 1;break;
+ 146              case 7: Value2[number]=0x42;return 1;break;
+ 147              case 8: Value2[number]=0x52;return 1;break;
+ 148              case 9: Value2[number]=0x4a;return 1;break;
+ 149              case 10: return 0;break;    //表示用户输入的是按键要求清除一个已经输入的密码
+ 150              case 11: return 2;break;  //表示用户按下了确认键
+ 151            }
+ 152          }
+ 153          
+ 154          
+
+C51 COMPILATION COMPLETE.  3 WARNING(S),  1 ERROR(S)

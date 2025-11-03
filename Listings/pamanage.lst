@@ -1,0 +1,219 @@
+C51 COMPILER V9.54   PAMANAGE                                                              09/17/2025 21:08:01 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE PAMANAGE
+OBJECT MODULE PLACED IN .\Objects\pamanage.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\pamanage\pamanage.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24C0
+                    -2;.\App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.\A
+                    -pp\scankey) DEBUG OBJECTEXTEND PRINT(.\Listings\pamanage.lst) TABS(2) OBJECT(.\Objects\pamanage.obj)
+
+line level    source
+
+   1          #include "pamanage.h"
+   2          #include "scankey.h"
+   3          #include "mainline.h"
+   4          #include "eeprom.h"
+   5          #include "smg.h"
+   6          
+   7          u8 PASSWORD[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+   8          u8 ALLPASSWORD[8] = {1, 1, 1, 1, 1, 1, 1, 1};
+   9          u8 INPASSWORD[8] = {0};
+  10          u8 CHANGEPASSWORD[8] = {0};
+  11          
+  12          void PasswordInit()
+  13          {
+  14   1        u8 i = 0;
+  15   1        for (i = 0; i < 8; i++)
+  16   1        {
+  17   2          CHANGEPASSWORD[i] = 0;
+  18   2          INPASSWORD[i] = 0;
+  19   2        }
+  20   1      }
+  21          
+  22          u8 JudgeAdmin()
+  23          {
+  24   1        u8 i = 0;
+  25   1        u8 flag = 1;
+  26   1        for (i = 0; i < 8; i++)
+  27   1        {
+  28   2          if (INPASSWORD[i] != ALLPASSWORD[i])
+  29   2          {
+  30   3            flag = 0;
+  31   3          }
+  32   2        }
+  33   1        return flag;
+  34   1      }
+  35          
+  36          u8 Judge()
+  37          {
+  38   1        u8 i = 0;
+  39   1        u8 flag = 1;
+  40   1        for (i = 0; i < 8; i++)
+  41   1        {
+  42   2          if (INPASSWORD[i] != PASSWORD[i] && INPASSWORD[i] != ALLPASSWORD[i])
+  43   2          {
+  44   3            flag = 0;
+  45   3          }
+  46   2        }
+  47   1        return flag;
+  48   1      }
+  49          
+  50          void ADCHANGE()
+  51          {
+  52   1        u8 i = 0;
+  53   1        for (i = 0; i < 8; i++)
+C51 COMPILER V9.54   PAMANAGE                                                              09/17/2025 21:08:01 PAGE 2   
+
+  54   1        {
+  55   2          ALLPASSWORD[i] = CHANGEPASSWORD[i];
+  56   2        }
+  57   1      }
+  58          
+  59          void AdminChange()
+  60          {
+  61   1        Init();
+  62   1        while (1)
+  63   1        {
+  64   2          KEY = getKeyNum();
+  65   2          getIr();
+  66   2          if (KEY ==104 || KEY1 == 0x0c || KEY2 == 104)
+  67   2          {
+  68   3            KEY1 = 16;
+  69   3            return;
+  70   3          }
+  71   2          if (KEY == 15 || KEY1 == 0x0f || KEY2 == 15)
+  72   2          {
+  73   3            KEY1 = 16;
+  74   3            ADCHANGE();
+  75   3            ADPAWrite();
+  76   3            Init();
+  77   3            return;
+  78   3          }
+  79   2          if (KEY == 14 || KEY1 == 0x0e || KEY2 == 14)
+  80   2          {
+  81   3            KEY1 = 16;
+  82   3            Init();
+  83   3          }
+  84   2          if (KEY == 13 || KEY1 == 0x0d || KEY2 == 13)
+  85   2          {
+  86   3            KEY1 = 16;
+  87   3            Back();
+  88   3          }
+  89   2          if (KEY < 10 || KEY1 < 10 || KEY2 < 10)
+  90   2          {
+  91   3            if (KEY2 != 16)
+  92   3            {
+  93   4              DATA[K] = gsmg_code[KEY2];
+  94   4              CHANGEPASSWORD[K] = KEY2;
+  95   4              KEY1 = 16;
+  96   4            }
+  97   3            else if (KEY1 != 16)
+  98   3            {
+  99   4              DATA[K] = gsmg_code[KEY1];
+ 100   4              CHANGEPASSWORD[K] = KEY1;
+ 101   4              KEY1 = 16;
+ 102   4            }
+ 103   3            else
+ 104   3            {
+ 105   4              DATA[K] = gsmg_code[KEY];
+ 106   4              CHANGEPASSWORD[K] = KEY;
+ 107   4              KEY = 16;
+ 108   4            }
+ 109   3            K++;
+ 110   3            if (K == 9)
+ 111   3            {
+ 112   4              K = 0;
+ 113   4              Init();
+ 114   4            }
+ 115   3          }
+C51 COMPILER V9.54   PAMANAGE                                                              09/17/2025 21:08:01 PAGE 3   
+
+ 116   2          smg_display(DATA, 1);
+ 117   2        }
+ 118   1      }
+ 119          
+ 120          void PACHANGE()
+ 121          {
+ 122   1        u8 i = 0;
+ 123   1        for (i = 0; i < 8; i++)
+ 124   1        {
+ 125   2          PASSWORD[i] = CHANGEPASSWORD[i];
+ 126   2        }
+ 127   1      }
+ 128          
+ 129          void PasswordChange()
+ 130          {
+ 131   1        Init();
+ 132   1        while (1)
+ 133   1        {
+ 134   2          KEY = getKeyNum();
+ 135   2          getIr();
+ 136   2          if (KEY ==104 || KEY1 == 0x0c || KEY2 == 104)
+ 137   2          {
+ 138   3            KEY1 = 16;
+ 139   3            return;
+ 140   3          }
+ 141   2          if (KEY == 15 || KEY1 == 0x0f || KEY2 == 15)
+ 142   2          {
+ 143   3            KEY1 = 16;
+ 144   3            PACHANGE();
+ 145   3            PAWrite();
+ 146   3            Init();
+ 147   3            return;
+ 148   3          }
+ 149   2          if (KEY == 14 || KEY1 == 0x0e || KEY2 == 14)
+ 150   2          {
+ 151   3            KEY1 = 16;
+ 152   3            Init();
+ 153   3          }
+ 154   2          if (KEY == 13 || KEY1 == 0x0d || KEY2 == 13)
+ 155   2          {
+ 156   3            KEY1 = 16;
+ 157   3            Back();
+ 158   3          }
+ 159   2          if (KEY < 10 || KEY1 < 10 || KEY2 <10)
+ 160   2          {
+ 161   3            if (KEY2 != 16)
+ 162   3            {
+ 163   4              DATA[K] = gsmg_code[KEY2];
+ 164   4              CHANGEPASSWORD[K] = KEY2;
+ 165   4              KEY2 = 16;
+ 166   4            }
+ 167   3            else if (KEY1 != 16)
+ 168   3            {
+ 169   4              DATA[K] = gsmg_code[KEY1];
+ 170   4              CHANGEPASSWORD[K] = KEY1;
+ 171   4              KEY1 = 16;
+ 172   4            }
+ 173   3            else
+ 174   3            {
+ 175   4              DATA[K] = gsmg_code[KEY];
+ 176   4              CHANGEPASSWORD[K] = KEY;
+ 177   4              KEY = 16;
+C51 COMPILER V9.54   PAMANAGE                                                              09/17/2025 21:08:01 PAGE 4   
+
+ 178   4            }
+ 179   3            K++;
+ 180   3            if (K == 9)
+ 181   3            {
+ 182   4              K = 0;
+ 183   4              Init();
+ 184   4            }
+ 185   3          }
+ 186   2          smg_display(DATA, 1);
+ 187   2        }
+ 188   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    599    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     32    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,238 @@
+C51 COMPILER V9.54   MAINLINE                                                              09/19/2025 10:25:26 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAINLINE
+OBJECT MODULE PLACED IN .\Objects\mainline.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\mainline\mainline.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24C0
+                    -2;.\App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.\A
+                    -pp\scankey) DEBUG OBJECTEXTEND PRINT(.\Listings\mainline.lst) TABS(2) OBJECT(.\Objects\mainline.obj)
+
+line level    source
+
+   1          #include "mainline.h"
+   2          #include "stepmotor.h"
+   3          #include "pamanage.h"
+   4          #include "interrupt.h"
+   5          #include "scankey.h"
+   6          #include "beep.h"
+   7          #include "smg.h"
+   8          
+   9          u8 DATA[8] = {0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40};
+  10          //u8 DATA[8] = {0x39, 0x3f, 0x5e, 0x79, 0x40, 0x40, 0x40, 0x40};
+  11          
+  12          u8 TIME[2] = {0x7d, 0x3f};
+  13          u8 K = 0;
+  14          u8 CountDown[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  15          u8 ERROR = 0;
+  16          u8 PASS[8] = {0xce,0xee,0xb6,0xb6,0x00,0x00,0x00,0x00};//1100 1110 1110 1110 1011 0110 1011 0110
+  17          u8 step = 0;
+  18          u16 FLAG = 3000;
+  19          
+  20          void Init()
+  21          {
+  22   1        DATA[0] = 0x40;
+  23   1        DATA[1] = 0x40;
+  24   1        DATA[2] = 0x40;
+  25   1        DATA[3] = 0x40;
+  26   1        DATA[4] = 0x40;
+  27   1        DATA[5] = 0x40;
+  28   1        DATA[6] = 0x40;
+  29   1        DATA[7] = 0x40;
+  30   1        PasswordInit();
+  31   1        K = 0;
+  32   1      }
+  33          
+  34          void ErrorAction()
+  35          {
+  36   1        timerInit();
+  37   1        while (SEC != 0)
+  38   1        {
+  39   2          CountDown[0] = gsmg_code[SEC / 10];
+  40   2          CountDown[1] = gsmg_code[SEC % 10];
+  41   2          smg_display(CountDown, 1);
+  42   2          KEY = getKeyNum();
+  43   2          if (KEY != 16 || KEY1 != 16)
+  44   2          {
+  45   3            if (KEY == 15 || KEY1 == 15)
+  46   3            {
+  47   4              if (JudgeAdmin())
+  48   4              {
+  49   5                Init();
+  50   5                SEC = 0;
+  51   5                TR0 = 0;
+  52   5                ET0 = 0;
+  53   5                return;
+C51 COMPILER V9.54   MAINLINE                                                              09/19/2025 10:25:26 PAGE 2   
+
+  54   5              }
+  55   4              else
+  56   4              {
+  57   5                Init();
+  58   5              }
+  59   4            }
+  60   3            if (KEY < 10)
+  61   3            {
+  62   4              INPASSWORD[K] = KEY;
+  63   4              K++;
+  64   4              if (K == 9)
+  65   4              {
+  66   5                K = 0;
+  67   5                Init();
+  68   5              }
+  69   4            }
+  70   3          }
+  71   2        }
+  72   1        if (SEC == 0 || SEC > 60)
+  73   1        {
+  74   2          TR0 = 0;
+  75   2          ET0 = 0;
+  76   2          return;
+  77   2        }
+  78   1        KEY1 = 16;
+  79   1      }
+  80          
+  81          void Back()
+  82          {
+  83   1        if (K != 0)
+  84   1        {
+  85   2          K--;
+  86   2          CHANGEPASSWORD[K] = 0;
+  87   2          DATA[K] = 0x40;
+  88   2        }
+  89   1      }
+  90          
+  91          void PassAction()
+  92          {
+  93   1      
+  94   1        Init();
+  95   1        timerInit();
+  96   1        Motor = 3;
+  97   1        FLAG = 3000;
+  98   1        while (FLAG--)
+  99   1        {
+ 100   2          step_motor_28BYJ48_send_pulse(step++, 0);
+ 101   2          if (step == 8)
+ 102   2            step = 0;
+ 103   2          delay_ms(1);
+ 104   2        }
+ 105   1        FLAG = 3000;
+ 106   1        delay_ms(2000);
+ 107   1        while (FLAG--)
+ 108   1        {
+ 109   2          step_motor_28BYJ48_send_pulse(step++, 1);
+ 110   2          if (step == 8)
+ 111   2            step = 0;
+ 112   2          delay_ms(1);
+ 113   2        }
+ 114   1        Motor = 3;
+ 115   1        SEC = 60;
+C51 COMPILER V9.54   MAINLINE                                                              09/19/2025 10:25:26 PAGE 3   
+
+ 116   1        TR0 = 0;
+ 117   1        ET0 = 0;
+ 118   1      }
+ 119          
+ 120          void UPDATA()
+ 121          {
+ 122   1        u8 i = 0;
+ 123   1        KEY = getKeyNum();
+ 124   1        getIr();
+ 125   1        if (KEY == 16 && KEY1 == 16 && KEY2 == 16)
+ 126   1          return;
+ 127   1        else
+ 128   1        {
+ 129   2          if (KEY == 15 || KEY1 == 0x0f || KEY2 == 15)
+ 130   2          {
+ 131   3            KEY1 = 16;
+ 132   3            if (Judge())
+ 133   3            {
+ 134   4              ERROR = 0;
+ 135   4              KEY2 = 16;
+ 136   4              PassAction();
+ 137   4              return;
+ 138   4            }
+ 139   3            else
+ 140   3            {
+ 141   4              ERROR++;
+ 142   4              Beep(800, 10);
+ 143   4              Init();
+ 144   4            }
+ 145   3          }
+ 146   2          if (ERROR == 3)
+ 147   2          {
+ 148   3            ERROR = 0;
+ 149   3            ErrorAction();
+ 150   3            SEC = 60;
+ 151   3            Init();
+ 152   3          }
+ 153   2          if (KEY == 14 || KEY1 == 0x0e || KEY2 == 14)
+ 154   2          {
+ 155   3            KEY1 = 16;
+ 156   3            Init();
+ 157   3          }
+ 158   2          if (KEY == 13 || KEY1 == 0x0d || KEY2 == 13)
+ 159   2          {
+ 160   3            KEY1 = 16;
+ 161   3            Back();
+ 162   3          }
+ 163   2          if (KEY == 101 || KEY1 == 0x0a || KEY2 == 101)
+ 164   2          {
+ 165   3            KEY1 = 16;
+ 166   3            PasswordChange();
+ 167   3          }
+ 168   2          if (KEY == 103 || KEY1 == 0x0b || KEY2 == 103)
+ 169   2          {
+ 170   3            KEY1 = 16;
+ 171   3            AdminChange();
+ 172   3          }
+ 173   2          if (KEY < 10 || KEY1 < 10 || KEY2 < 10)
+ 174   2          {
+ 175   3            if (KEY2 != 16)
+ 176   3            {
+ 177   4              DATA[K] = gsmg_code[KEY2];
+C51 COMPILER V9.54   MAINLINE                                                              09/19/2025 10:25:26 PAGE 4   
+
+ 178   4              INPASSWORD[K] = KEY2;
+ 179   4              KEY2 = 16;
+ 180   4            }
+ 181   3            else if (KEY1 != 16)
+ 182   3            {
+ 183   4              DATA[K] = gsmg_code[KEY1];
+ 184   4              INPASSWORD[K] = KEY1;
+ 185   4              KEY1 = 16;
+ 186   4            }
+ 187   3            else
+ 188   3            {
+ 189   4              DATA[K] = gsmg_code[KEY];
+ 190   4              INPASSWORD[K] = KEY;
+ 191   4              KEY = 16;
+ 192   4            }
+ 193   3            K++;
+ 194   3            if (K == 9)
+ 195   3            {
+ 196   4              K = 0;
+ 197   4              Init();
+ 198   4            }
+ 199   3          }
+ 200   2        }
+ 201   1      }
+ 202          
+ 203          void ShowNum(void)
+ 204          {
+ 205   1        UPDATA();
+ 206   1        smg_display(DATA, 1);
+ 207   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    623    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     31       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

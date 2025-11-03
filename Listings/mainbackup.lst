@@ -1,0 +1,436 @@
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAINBACKUP
+OBJECT MODULE PLACED IN .\Objects\mainbackup.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE mainbackup.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\..\Libeary\Personal\
+                    -public;..\..\Libeary\Personal\smg;..\..\Libeary\Personal\key) DEBUG OBJECTEXTEND PRINT(.\Listings\mainbackup.lst) TABS(2
+                    -) OBJECT(.\Objects\mainbackup.obj)
+
+line level    source
+
+   1          #include "REGX52.H"
+   2          
+   3          typedef unsigned int u16;
+   4          typedef unsigned char u8;
+   5          typedef unsigned long u32;
+   6          
+   7          sbit LSA=P2^2;
+   8          sbit LSB=P2^3;
+   9          sbit LSC=P2^4;
+  10          sbit BEEP = P2^5;
+  11          sbit K1 = P3^0;
+  12          sbit K2 = P3^1;
+  13          sbit K3 = P3^2;
+  14          sbit K4 = P3^3;
+  15          
+  16          u8 CODE[8] = {0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07};
+  17          u8 gsmg_code[17]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+  18                  0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};
+  19          u8 demo[8] = {0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+  20                  0x7f};
+  21          u8 DATA[8] = {0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40};
+  22          u8 TIME[2] ={0x7d,0x3f};
+  23          u8 K = 0;
+  24          u32 PASSWORD = 12345678;
+  25          u32 INPASSWORD = 0;
+  26          u8 ERROR = 0;
+  27          u32 ALLPASSWORD = 11111111;  
+  28          u8 KeyNum;
+  29          u32 CHANGEPASSWORD = 0;
+  30          u8 KEY = 0;
+  31          u8 timeNum = 0;
+  32          u8 SEC = 60;
+  33          u8 CountDown[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  34          
+  35          void delay_10us(u16 ten_us)
+  36          {
+  37   1        while(ten_us--);  
+  38   1      }       
+  39                  
+  40          void Delay(u8 time){
+  41   1      unsigned char i, j;
+  42   1        while(time--)
+  43   1        {
+  44   2          i = 2;
+  45   2          j = 239;
+  46   2          do
+  47   2          {
+  48   3            while (--j);
+  49   3          } while (--i);
+  50   2        }
+  51   1      }
+  52          
+  53          void initEx0()
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 2   
+
+  54          {
+  55   1        SCON = 0X50;
+  56   1        PCON = 0;
+  57   1        TL1 = 243;
+  58   1        TH1 = 243;
+  59   1        TMOD = 0X20;
+  60   1        ES = 1;
+  61   1        EA = 1;
+  62   1        TR1 = 1;
+  63   1      
+  64   1      } 
+  65          
+  66           u8 KEY1 = 16;
+  67           
+  68          void DataAction()  interrupt 4
+  69          {
+  70   1        KEY1 = SBUF;
+  71   1        TI = 0;
+  72   1      }
+  73          
+  74          
+  75          
+  76          void timerInit()
+  77          {
+  78   1        TMOD = 0X01;
+  79   1        TR0 = 1;
+  80   1        ET0 = 1;
+  81   1        EA = 1;
+  82   1        TH0 = 0x4b;
+  83   1        TL0 = 0xff;
+  84   1      }
+  85          
+  86          void timerAction() interrupt 1
+  87          {
+  88   1        TH0 = 0x4b;
+  89   1        TL0 = 0xff;
+  90   1        timeNum++;
+  91   1        if(timeNum == 20)
+  92   1        {
+  93   2          timeNum = 0;
+  94   2          SEC--;
+  95   2          if(SEC == 0 || SEC > 60)
+  96   2          {
+  97   3            SEC = 60;
+  98   3            TR0 = 0;
+  99   3            ET0 = 0;
+ 100   3          }
+ 101   2        }
+ 102   1      }
+ 103          
+ 104          u8 getKeyNum()
+ 105          {
+ 106   1        u8 key = 16;
+ 107   1        P1 = 0X0F;
+ 108   1        
+ 109   1        if(!(K1 && K2 && K3 && K4))
+ 110   1        {
+ 111   2          Delay(10);
+ 112   2            if(K1 == 0)return 102;
+ 113   2            if(K2 == 0)return 101;
+ 114   2            if(K3 == 0)return 103;
+ 115   2            if(K4 == 3)return 104;
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 3   
+
+ 116   2        }
+ 117   1        
+ 118   1        if(P1 != 0X0F)
+ 119   1        {
+ 120   2          Delay(10);
+ 121   2          if(P1 != 0X0F)
+ 122   2          {
+ 123   3            if(P1 == 0x07)
+ 124   3            { 
+ 125   4              key = 0;
+ 126   4            }
+ 127   3            else if(P1 == 0x0B)
+ 128   3            {
+ 129   4              key = 1;
+ 130   4            }
+ 131   3            else if(P1 == 0x0D)
+ 132   3            {
+ 133   4              key = 2;
+ 134   4            }
+ 135   3            else if(P1 == 0x0E) 
+ 136   3            {
+ 137   4              key = 3;
+ 138   4            }
+ 139   3            P1 = 0XF0;
+ 140   3            if(P1 == 0x70)  
+ 141   3            {
+ 142   4              key = key + 0;
+ 143   4            }
+ 144   3            else if(P1 == 0xB0) 
+ 145   3            {
+ 146   4              key = key + 4;
+ 147   4            }
+ 148   3            else if(P1 == 0xD0) 
+ 149   3            {
+ 150   4              key = key + 8;
+ 151   4            }
+ 152   3            else if(P1 == 0xE0) 
+ 153   3            {
+ 154   4              key = key + 12;
+ 155   4            }
+ 156   3            while(P1 != 0XF0);
+ 157   3          }
+ 158   2        }
+ 159   1        return key;
+ 160   1      }
+ 161            
+ 162          void SmgDisplay(u8 dat[])
+ 163          {
+ 164   1        u8 i=0;
+ 165   1        u8 pos_temp=0;
+ 166   1      
+ 167   1        for(i=pos_temp;i<8;i++)
+ 168   1        {
+ 169   2            switch(i)
+ 170   2          {
+ 171   3            case 0: LSC=1;LSB=1;LSA=1;break;
+ 172   3            case 1: LSC=1;LSB=1;LSA=0;break;
+ 173   3            case 2: LSC=1;LSB=0;LSA=1;break;
+ 174   3            case 3: LSC=1;LSB=0;LSA=0;break;
+ 175   3            case 4: LSC=0;LSB=1;LSA=1;break;
+ 176   3            case 5: LSC=0;LSB=1;LSA=0;break;
+ 177   3            case 6: LSC=0;LSB=0;LSA=1;break;
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 4   
+
+ 178   3            case 7: LSC=0;LSB=0;LSA=0;break;
+ 179   3          }
+ 180   2          P0 = dat[i-pos_temp];
+ 181   2          delay_10us(100);
+ 182   2          P0 = 0x00;
+ 183   2        }
+ 184   1      }
+ 185          
+ 186          void Init()
+ 187          {
+ 188   1          DATA[0] = 0x40;
+ 189   1          DATA[1] = 0x40;
+ 190   1          DATA[2] = 0x40;
+ 191   1          DATA[3] = 0x40;
+ 192   1          DATA[4] = 0x40;
+ 193   1          DATA[5] = 0x40;
+ 194   1          DATA[6] = 0x40;
+ 195   1          DATA[7] = 0x40;
+ 196   1          CHANGEPASSWORD = 0;
+ 197   1          INPASSWORD = 0;
+ 198   1          K = 0;
+ 199   1      }
+ 200          
+ 201          void Beep(u16 time,u16 fre)
+ 202          {
+ 203   1        while(time--)
+ 204   1        {
+ 205   2          BEEP=!BEEP;
+ 206   2          delay_10us(fre);  
+ 207   2        }   
+ 208   1      }
+ 209          
+ 210          u8 JudgeAdmin()
+ 211          {
+ 212   1        return INPASSWORD == ALLPASSWORD;
+ 213   1      }
+ 214          
+ 215          
+ 216          void ErrorAction()
+ 217          {
+ 218   1        timerInit();
+ 219   1        while(SEC != 0)
+ 220   1        {
+ 221   2          CountDown[0] = gsmg_code[SEC/10];
+ 222   2          CountDown[1] = gsmg_code[SEC%10];
+ 223   2          SmgDisplay(CountDown);
+ 224   2          KEY = getKeyNum();
+ 225   2          if(KEY != 16)
+ 226   2          {
+ 227   3          if(KEY == 15)
+ 228   3          {
+ 229   4            if(JudgeAdmin())
+ 230   4            {
+ 231   5              Init();
+ 232   5              SEC = 0;
+ 233   5            }
+ 234   4            else
+ 235   4            {
+ 236   5            Init();
+ 237   5            }
+ 238   4          }
+ 239   3          if(KEY == 14)
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 5   
+
+ 240   3          {
+ 241   4            Init();
+ 242   4          }
+ 243   3          if(KEY < 10)
+ 244   3          {
+ 245   4            INPASSWORD = INPASSWORD * 10 + KEY;
+ 246   4          }
+ 247   3            
+ 248   3          }
+ 249   2        }     
+ 250   1      }
+ 251          
+ 252          
+ 253          void Back()
+ 254          {
+ 255   1        if(K != 0)
+ 256   1        {
+ 257   2        K--;
+ 258   2        CHANGEPASSWORD /= 10;
+ 259   2        DATA[K] = 0x40;
+ 260   2        }
+ 261   1      }
+ 262          
+ 263          u8 Judge()
+ 264          {
+ 265   1        return INPASSWORD == PASSWORD || INPASSWORD == ALLPASSWORD;
+ 266   1      }
+ 267          
+ 268          void AdminChange()
+ 269          {
+ 270   1          Init();
+ 271   1        CHANGEPASSWORD = 0;
+ 272   1        while(1)
+ 273   1        {
+ 274   2        KEY = getKeyNum();
+ 275   2          if(KEY == 15)
+ 276   2          {
+ 277   3            ALLPASSWORD = CHANGEPASSWORD;
+ 278   3            Init();
+ 279   3            return;
+ 280   3          }
+ 281   2          if(KEY == 14)
+ 282   2            Init();
+ 283   2          if(KEY == 13)
+ 284   2            Back(); 
+ 285   2          if(KEY < 10)
+ 286   2          {
+ 287   3          DATA[K] = gsmg_code[KEY];
+ 288   3          CHANGEPASSWORD = CHANGEPASSWORD * 10 + KEY;
+ 289   3          K++;
+ 290   3              if(K == 9)
+ 291   3              {
+ 292   4                K = 0;
+ 293   4                CHANGEPASSWORD = 0;
+ 294   4                Init();
+ 295   4              }
+ 296   3        }
+ 297   2          SmgDisplay(DATA);
+ 298   2      }
+ 299   1      }
+ 300          
+ 301          void PasswordChange()
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 6   
+
+ 302          {
+ 303   1        Init();
+ 304   1        CHANGEPASSWORD = 0;
+ 305   1        while(1)
+ 306   1        {
+ 307   2        KEY = getKeyNum();
+ 308   2          if(KEY == 15)
+ 309   2          {
+ 310   3            PASSWORD = CHANGEPASSWORD;
+ 311   3            Init();
+ 312   3            return;
+ 313   3          }
+ 314   2          if(KEY == 14)
+ 315   2            Init();
+ 316   2          if(KEY == 13)
+ 317   2            Back(); 
+ 318   2          if(KEY < 10)
+ 319   2          {
+ 320   3          DATA[K] = gsmg_code[KEY];
+ 321   3          CHANGEPASSWORD = CHANGEPASSWORD * 10 + KEY;
+ 322   3          K++;
+ 323   3              if(K == 9)
+ 324   3              {
+ 325   4                K = 0;
+ 326   4                CHANGEPASSWORD = 0;
+ 327   4                Init();
+ 328   4              }
+ 329   3        }
+ 330   2          SmgDisplay(DATA);
+ 331   2      }
+ 332   1      }
+ 333          
+ 334          void PassAction()
+ 335          {
+ 336   1              u8 t = 100;
+ 337   1              while(t--)
+ 338   1              {
+ 339   2              SmgDisplay(CODE);
+ 340   2              }
+ 341   1              Init();
+ 342   1      }
+ 343          
+ 344          void UPDATA()
+ 345          {
+ 346   1        u8 i = 0;
+ 347   1        KEY = getKeyNum();
+ 348   1        if(KEY == 0)
+ 349   1          return;
+ 350   1        else 
+ 351   1        {
+ 352   2          if(KEY == 15)
+ 353   2            if(Judge())
+ 354   2            {
+ 355   3              PassAction();
+ 356   3              return;
+ 357   3            }
+ 358   2            else 
+ 359   2            {
+ 360   3              ERROR++;
+ 361   3            //Beep(3000,10);
+ 362   3              Init();
+ 363   3            }
+C51 COMPILER V9.54   MAINBACKUP                                                            06/26/2025 19:02:20 PAGE 7   
+
+ 364   2            if(ERROR == 3)
+ 365   2            {
+ 366   3              ERROR = 0;
+ 367   3              ErrorAction();
+ 368   3              Init();
+ 369   3            }
+ 370   2          if(KEY == 14)
+ 371   2            Init();
+ 372   2          if(KEY == 13)
+ 373   2            Back();
+ 374   2          if(KEY == 101)
+ 375   2            PasswordChange();
+ 376   2          if(KEY == 102)
+ 377   2            AdminChange();
+ 378   2            if(KEY < 10)
+ 379   2              {
+ 380   3                KEY = 16;
+ 381   3          
+ 382   3          DATA[K] = gsmg_code[KEY];
+ 383   3          INPASSWORD = INPASSWORD * 10 + KEY;
+ 384   3          K++;
+ 385   3              if(K == 9)
+ 386   3              {
+ 387   4                K = 0;
+ 388   4                Init();
+ 389   4              }
+ 390   3              }
+ 391   2        }
+ 392   1      }
+ 393          
+ 394          
+ 395            void ShowNum(void)
+ 396            {
+ 397   1          UPDATA();
+ 398   1          SmgDisplay(DATA);
+ 399   1        }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1209    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     74       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

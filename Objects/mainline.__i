@@ -1,0 +1,1 @@
+"App\mainline\mainline.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(.\App\AT24C02;.\App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.\App\scankey) DEBUG OBJECTEXTEND PRINT(.\Listings\mainline.lst) TABS (2) OBJECT(.\Objects\mainline.obj)

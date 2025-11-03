@@ -1,0 +1,13 @@
+C51 COMPILER V9.54   I2C                                                                   06/27/2025 16:46:19 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN .\Objects\I2C.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\I2C\I2C.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24C02;.\App\I2
+                    -C;.\Public;.\App\smg;.\App\stepmotor) DEBUG OBJECTEXTEND PRINT(.\Listings\I2C.lst) TABS(2) OBJECT(.\Objects\I2C.obj)
+
+line level    source
+
+*** ERROR C318 OF App\I2C\I2C.c: can't open file 'App\I2C\I2C.c'
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  1 ERROR(S)

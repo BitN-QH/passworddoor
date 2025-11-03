@@ -1,0 +1,155 @@
+C51 COMPILER V9.54   INTERRUPT                                                             09/18/2025 21:24:52 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE INTERRUPT
+OBJECT MODULE PLACED IN .\Objects\interrupt.obj
+COMPILER INVOKED BY: D:\App\KeilC51\C51\BIN\C51.EXE App\interrupt\interrupt.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\App\AT24
+                    -C02;.\App\I2C;.\Public;.\App\smg;.\App\stepmotor;.\App\beep;.\App\eeprom;.\App\interrupt;.\App\mainline;.\App\pamanage;.
+                    -\App\scankey) DEBUG OBJECTEXTEND PRINT(.\Listings\interrupt.lst) TABS(2) OBJECT(.\Objects\interrupt.obj)
+
+line level    source
+
+   1          #include "interrupt.h"
+   2          #include "scankey.h"
+   3          #include "stepmotor.h"
+   4          #include "pamanage.h"
+   5          #include "public.h"
+   6          
+   7          u8 timeNum = 0;
+   8          u8 gired_data[4];
+   9          u8 IrValue[4];   
+  10          u8 times;    
+  11          u8 isIr = 1;        
+  12          
+  13          void initEx0()
+  14          {
+  15   1        SCON = 0X50; // 0101 0000
+  16   1        PCON = 0;
+  17   1        TL1 = 253;
+  18   1        TH1 = 253;
+  19   1        TMOD = 0X20;
+  20   1        ES = 1;
+  21   1        EA = 1;
+  22   1        TR1 = 1;
+  23   1      }
+  24          
+  25          void DataAction() interrupt 4
+  26          {
+  27   1        KEY1 = SBUF;
+  28   1        RI = 0;
+  29   1      }
+  30          
+  31          void timerInit() // TOMD = 0x01?ив?бу?им????????
+  32          {
+  33   1        TMOD &= 0xF0; // ????????4??(T0)
+  34   1        TMOD |= 0x01; // б└?????4??(T1)??б└?
+  35   1        TR0 = 1;
+  36   1        ET0 = 1;
+  37   1        EA = 1;
+  38   1        TH0 = 0x4b;
+  39   1        TL0 = 0xff;
+  40   1      }
+  41          
+  42          void timerAction() interrupt 1
+  43          {
+  44   1        TH0 = 0x4b;
+  45   1        TL0 = 0xff;
+  46   1        timeNum++;
+  47   1        if (timeNum == 20)
+  48   1        {
+  49   2          timeNum = 0;
+  50   2          SEC--;
+  51   2          Motor--;
+  52   2          if (SEC == -1)
+  53   2          {
+C51 COMPILER V9.54   INTERRUPT                                                             09/18/2025 21:24:52 PAGE 2   
+
+  54   3            SEC = 60;
+  55   3            TR0 = 0;
+  56   3            ET0 = 0;
+  57   3          }
+  58   2        }
+  59   1      }
+  60          
+  61          void ired_init(void)
+  62          {
+  63   1        IT0=1;
+  64   1        EX0=1;
+  65   1        EA=1;
+  66   1        IRED=1;
+  67   1      }
+  68          
+  69          void ired() interrupt 0
+  70          {
+  71   1        u8 ired_high_time=0;
+  72   1        u16 time_cnt=0;
+  73   1        u8 i=0,j=0;
+  74   1        isIr = 0;
+  75   1      
+  76   1        if(IRED==0)
+  77   1        {
+  78   2          time_cnt=1000;
+  79   2          while((!IRED)&&(time_cnt))
+  80   2          {
+  81   3            delay_10us(1);
+  82   3            time_cnt--;
+  83   3            if(time_cnt==0)return;    
+  84   3          }
+  85   2          if(IRED)
+  86   2          {
+  87   3            time_cnt=500;
+  88   3            while(IRED&&time_cnt)
+  89   3            {
+  90   4              delay_10us(1);
+  91   4              time_cnt--;
+  92   4              if(time_cnt==0)return;  
+  93   4            }
+  94   3            for(i=0;i<4;i++)
+  95   3            {
+  96   4              for(j=0;j<8;j++)
+  97   4              {
+  98   5                time_cnt=600;
+  99   5                while((IRED==0)&&time_cnt)
+ 100   5                {
+ 101   6                  delay_10us(1);
+ 102   6                  time_cnt--;
+ 103   6                  if(time_cnt==0)return;  
+ 104   6                }
+ 105   5                time_cnt=20;
+ 106   5                while(IRED)
+ 107   5                {
+ 108   6                  delay_10us(10);
+ 109   6                  ired_high_time++;
+ 110   6                  if(ired_high_time>20)return;  
+ 111   6                }
+ 112   5                gired_data[i]>>=1;
+ 113   5                if(ired_high_time>=8)
+ 114   5                  gired_data[i]|=0x80;
+ 115   5                ired_high_time=0;
+C51 COMPILER V9.54   INTERRUPT                                                             09/18/2025 21:24:52 PAGE 3   
+
+ 116   5              }
+ 117   4            }
+ 118   3          }
+ 119   2          if(gired_data[2]!=~gired_data[3])
+ 120   2          {
+ 121   3            for(i=0;i<4;i++)
+ 122   3              gired_data[i]=0;
+ 123   3            return; 
+ 124   3          }
+ 125   2        }   
+ 126   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    406    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     11       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

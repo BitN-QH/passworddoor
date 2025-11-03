@@ -1,0 +1,14 @@
+".\Objects\main.obj",
+".\Objects\smg.obj",
+".\Objects\stepmotor.obj",
+".\Objects\24c02.obj",
+".\Objects\iic.obj",
+".\Objects\scankey.obj",
+".\Objects\pamanage.obj",
+".\Objects\mainline.obj",
+".\Objects\interrupt.obj",
+".\Objects\beep.obj",
+".\Objects\eeprom.obj",
+".\Objects\public.obj" 
+TO ".\Objects\MAIN" 
+PRINT(".\Listings\MAIN.m51")
